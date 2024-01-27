@@ -1,3 +1,4 @@
+
 import json
 from stopwordsiso import stopwords
 from parsivar import Normalizer, Tokenizer, FindStems
@@ -10,8 +11,7 @@ my_normalizer = Normalizer()
 my_tokenizer = Tokenizer()
 # stemmer
 my_stemmer = FindStems()
-# stop words
-persian_stopwords = stopwords("fa")
+
 
 # opening JSON file
 f = open('IR_data_news_12k.json')
@@ -19,8 +19,8 @@ f = open('IR_data_news_12k.json')
 documents = json.load(f)
 f.close()
 
-# Lists to store words and their frequencies
-words_frequencies = Counter()
+# Dictionary to store words with their frequency and list of documents
+word_dict = {}
 
 # iteration on documents
 for docID in documents:
@@ -29,16 +29,26 @@ for docID in documents:
     # tokenize
     normal_token = my_tokenizer.tokenize_words(normal_list)
 
-    # Count word frequencies after normalization and tokenization
-    word_frequencies_in_dict = Counter(normal_token)
+    # Stemming
+    stemmed_token = [my_stemmer.convert_to_stem(w) for w in normal_token]
 
-    # Add word frequencies to the overall frequencies Counter
-    words_frequencies.update(word_frequencies_in_dict)
+    # Count word frequencies after normalization, tokenization, and stemming
+    word_frequencies_in_dict = Counter(stemmed_token)
+
+    # Update the word_dict with word frequencies and list of documents
+    for word, frequency in word_frequencies_in_dict.items():
+        if word not in word_dict:
+            word_dict[word] = {'frequency': frequency, 'documents': [docID]}
+        else:
+            word_dict[word]['frequency'] += frequency
+            if docID not in word_dict[word]['documents']:
+                word_dict[word]['documents'].append(docID)
 
 # Sort words based on frequency in descending order
-sorted_words = sorted(words_frequencies.items(), key=lambda x: x[1], reverse=True)
+sorted_words = sorted(word_dict.items(), key=lambda x: x[1]['frequency'], reverse=True)
+
 # Extract the top 50 most frequent words
-top_50_words = [[word, freq] for word, freq in sorted_words[:50]]
+top_50_words = [(word, data['frequency']) for word, data in sorted_words[:50]]
 
 # Write the list of words and their frequencies to a file
 output_file_path = 'removed_words_frequencies.txt'
@@ -48,14 +58,14 @@ with open(output_file_path, 'w', encoding='utf-8') as output_file:
         output_file.write(f"{word}: {frequency}\n")
 
 # Remove the top 50 most frequent words from the entire corpus
-filtered_list = [[word, freq] for word, freq in sorted_words[50:]]
+filtered_list = [(word, data['frequency'], data['documents']) for word, data in sorted_words[50:]]
 
 # Write the filtered list to a file
 filtered_list_file_path = 'filtered_list.txt'
 with open(filtered_list_file_path, 'w', encoding='utf-8') as filtered_list_file:
     filtered_list_file.write("Filtered List:\n")
-    for word, frequency in filtered_list:
-        filtered_list_file.write(f"{word}: {frequency}\n")
+    for word, frequency, documents in filtered_list:
+        filtered_list_file.write(f"{word}: {frequency}  docs: {documents}\n")
 
 # Print a message indicating successful writing to files
 print(f"Results written to {output_file_path} and {filtered_list_file_path}")
