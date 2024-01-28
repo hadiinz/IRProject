@@ -8,12 +8,13 @@ with open('outputFiles/filtered_list.json', 'r', encoding='utf-8') as filtered_l
 # Create a set to store unique document IDs
 all_documents = set()
 
+# Create a dictionary to store IDF values for each word
+idf_values = {}
+
 # Calculate the total number of documents by collecting all document IDs from the filtered list
 for word in filtered_list:
     all_documents.update(word['documents'].keys())
-
-# Calculate IDF for each word
-idf_values = {word['word']: math.log(len(all_documents) / len(word['documents'])) for word in filtered_list}
+    idf_values[word['word']] = word['idf']
 
 # Dictionary to store TF-IDF vectors for each document
 tfidf_vectors = {}

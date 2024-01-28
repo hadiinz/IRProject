@@ -4,3 +4,6 @@ data_100.json
 data_100.json
 outputFiles/filtered_list.json
 outputFiles/tfidf_vectors.json
+outputFiles/lists_champions.json
+dataset/data_1000.json
+dataset/data_5000.json
