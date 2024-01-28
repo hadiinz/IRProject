@@ -1,4 +1,3 @@
-
 import json
 from stopwordsiso import stopwords
 from parsivar import Normalizer, Tokenizer, FindStems
@@ -12,14 +11,13 @@ my_tokenizer = Tokenizer()
 # stemmer
 my_stemmer = FindStems()
 
-
 # opening JSON file
-f = open('IR_data_news_12k.json')
+f = open('data_100.json')
 # JSON object as a dictionary
 documents = json.load(f)
 f.close()
 
-# Dictionary to store words with their frequency and list of documents
+# Dictionary to store words with their frequency, list of documents, and term frequency in each document
 word_dict = {}
 
 # iteration on documents
@@ -35,14 +33,20 @@ for docID in documents:
     # Count word frequencies after normalization, tokenization, and stemming
     word_frequencies_in_dict = Counter(stemmed_token)
 
-    # Update the word_dict with word frequencies and list of documents
+    # Update the word_dict with word frequencies, list of documents, and term frequency in each document
     for word, frequency in word_frequencies_in_dict.items():
         if word not in word_dict:
-            word_dict[word] = {'frequency': frequency, 'documents': [docID]}
+            word_dict[word] = {'frequency': frequency, 'documents': {docID: {'term_frequency': frequency, 'positions': []}}}
         else:
             word_dict[word]['frequency'] += frequency
             if docID not in word_dict[word]['documents']:
-                word_dict[word]['documents'].append(docID)
+                word_dict[word]['documents'][docID] = {'term_frequency': frequency, 'positions': []}
+            else:
+                word_dict[word]['documents'][docID]['term_frequency'] += frequency
+
+    # Extract positions of each term in the document
+    for pos, term in enumerate(stemmed_token):
+        word_dict[term]['documents'][docID]['positions'].append(pos)
 
 # Sort words based on frequency in descending order
 sorted_words = sorted(word_dict.items(), key=lambda x: x[1]['frequency'], reverse=True)
@@ -65,7 +69,9 @@ filtered_list_file_path = 'filtered_list.txt'
 with open(filtered_list_file_path, 'w', encoding='utf-8') as filtered_list_file:
     filtered_list_file.write("Filtered List:\n")
     for word, frequency, documents in filtered_list:
-        filtered_list_file.write(f"{word}: {frequency}  docs: {documents}\n")
+        # Format the list of documents properly before writing to the file
+        doc_info = ', '.join(f"{docID}: {info['term_frequency']} (positions: {info['positions']})" for docID, info in documents.items())
+        filtered_list_file.write(f"{word}: {frequency}  docs: {doc_info}\n")
 
 # Print a message indicating successful writing to files
 print(f"Results written to {output_file_path} and {filtered_list_file_path}")
