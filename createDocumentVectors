@@ -1,0 +1,38 @@
+import json
+import math
+
+# Load the filtered_list.json file
+with open('outputFiles/filtered_list.json', 'r', encoding='utf-8') as filtered_list_file:
+    filtered_list = json.load(filtered_list_file)
+
+# Create a set to store unique document IDs
+all_documents = set()
+
+# Calculate the total number of documents by collecting all document IDs from the filtered list
+for word in filtered_list:
+    all_documents.update(word['documents'].keys())
+
+# Calculate IDF for each word
+idf_values = {word['word']: math.log(len(all_documents) / len(word['documents'])) for word in filtered_list}
+
+# Dictionary to store TF-IDF vectors for each document
+tfidf_vectors = {}
+
+# Calculate TF-IDF for each term in each document
+for word in filtered_list:
+    for doc_id, doc_info in word['documents'].items():
+        tf = doc_info['term_frequency']
+        idf = idf_values[word['word']]
+        tfidf = tf * idf
+
+        if doc_id not in tfidf_vectors:
+            tfidf_vectors[doc_id] = {word['word']: tfidf}
+        else:
+            tfidf_vectors[doc_id][word['word']] = tfidf
+
+# Store the TF-IDF vectors in a JSON file
+output_file_path = 'outputFiles/tfidf_vectors.json'
+with open(output_file_path, 'w', encoding='utf-8') as output_file:
+    json.dump(tfidf_vectors, output_file, ensure_ascii=False, indent=2)
+
+print(f"TF-IDF vectors written to {output_file_path}")

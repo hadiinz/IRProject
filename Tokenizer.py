@@ -12,7 +12,7 @@ my_tokenizer = Tokenizer()
 my_stemmer = FindStems()
 
 # opening JSON file
-f = open('data_100.json')
+f = open('dataset/data_100.json')
 # JSON object as a dictionary
 documents = json.load(f)
 f.close()
@@ -44,9 +44,9 @@ for docID in documents:
             else:
                 word_dict[word]['documents'][docID]['term_frequency'] += frequency
 
-    # Extract positions of each term in the document
-    for pos, term in enumerate(stemmed_token):
-        word_dict[term]['documents'][docID]['positions'].append(pos)
+        # Extract positions of each term in the document
+        positions = [pos for pos, term in enumerate(stemmed_token) if term == word]
+        word_dict[word]['documents'][docID]['positions'].extend(positions)
 
 # Sort words based on frequency in descending order
 sorted_words = sorted(word_dict.items(), key=lambda x: x[1]['frequency'], reverse=True)
@@ -55,23 +55,19 @@ sorted_words = sorted(word_dict.items(), key=lambda x: x[1]['frequency'], revers
 top_50_words = [(word, data['frequency']) for word, data in sorted_words[:50]]
 
 # Write the list of words and their frequencies to a file
-output_file_path = 'removed_words_frequencies.txt'
+output_file_path = 'outputFiles/removed_words_frequencies.txt'
 with open(output_file_path, 'w', encoding='utf-8') as output_file:
     output_file.write("Words and Frequencies Sorted by Frequency:\n")
     for word, frequency in top_50_words:
         output_file.write(f"{word}: {frequency}\n")
 
 # Remove the top 50 most frequent words from the entire corpus
-filtered_list = [(word, data['frequency'], data['documents']) for word, data in sorted_words[50:]]
+filtered_list = [{'word': word, 'frequency': data['frequency'], 'documents': data['documents']} for word, data in sorted_words[50:]]
 
-# Write the filtered list to a file
-filtered_list_file_path = 'filtered_list.txt'
-with open(filtered_list_file_path, 'w', encoding='utf-8') as filtered_list_file:
-    filtered_list_file.write("Filtered List:\n")
-    for word, frequency, documents in filtered_list:
-        # Format the list of documents properly before writing to the file
-        doc_info = ', '.join(f"{docID}: {info['term_frequency']} (positions: {info['positions']})" for docID, info in documents.items())
-        filtered_list_file.write(f"{word}: {frequency}  docs: {doc_info}\n")
+# Write the filtered list to a JSON file
+filtered_list_json_path = 'outputFiles/filtered_list.json'
+with open(filtered_list_json_path, 'w', encoding='utf-8') as filtered_list_json_file:
+    filtered_list_json_file.write(json.dumps(filtered_list, indent=2, ensure_ascii=False))
 
 # Print a message indicating successful writing to files
-print(f"Results written to {output_file_path} and {filtered_list_file_path}")
+print(f"Results written to {output_file_path} and {filtered_list_json_path}")

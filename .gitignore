@@ -1,3 +1,6 @@
 IR_data_news_12k.json
 removed_words_frequencies.txt
-filtered_list.txt
+data_100.json
+data_100.json
+outputFiles/filtered_list.json
+outputFiles/tfidf_vectors.json

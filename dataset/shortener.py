@@ -1,6 +1,6 @@
 import ujson as json
 samples = 100
-with open('IR_data_news_12k.json', 'r') as f:
+with open('dataset/IR_data_news_12k.json', 'r') as f:
 	data = json.load(f)
 	short_data = {}
 	count = 0
@@ -9,5 +9,5 @@ with open('IR_data_news_12k.json', 'r') as f:
 		count += 1
 		if count > samples:
 			break
-	with open("data_" + str(samples) + ".json", "w") as nf:
+	with open("dataset/IR_data_news_12k.json" + str(samples) + ".json", "w") as nf:
 		json.dump(short_data, nf)
